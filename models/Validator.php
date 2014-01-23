@@ -4,6 +4,18 @@ class Validator {
 
     public function __construct() {}
 
+    /*
+    * Valid types are:
+    * float, int
+    * ctype_print, ctype_alpha, ctype_alnum, ctype_*
+    * validate_currency
+    * validate_country
+    * validate_mongo_id
+    * validate_mysql_id
+    * validate_date
+    * validate_price
+    * validate_upload
+    */
     private function checkType($val, $type) {
 
         // No type specified
@@ -45,6 +57,10 @@ class Validator {
 
                 if (strlen($val) === 24) return TRUE;
                 else return FALSE;
+
+            } else if ($type === "validate_mysql_id") {
+
+                return ctype_digit($val);
 
             } else if ($type === "validate_date") {
 

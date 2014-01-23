@@ -6,7 +6,7 @@ define("CONTROLLER_PATH", BASE_PATH."/controllers");
 define("CONFIG_PATH", BASE_PATH."/configuration");
 
 // Compatibility includes
-require_once BASEPATH."/compat/compat.php";
+require_once BASE_PATH."/compat/compat.php";
 
 class Sleepy {
 
@@ -14,10 +14,12 @@ class Sleepy {
 
     public function __construct(array $options=array()) {
 
-        if (array_key_exists("resources", $options)) require_once($options["resources"]);
-        if (array_key_exists("models", $options)) define("RESOURCE_MODEL_PATH", $options["models"]);
-        if (array_key_exists("controllers", $options)) define("RESOURCE_CONTROLLER_PATH", $options["controllers"]);
-
+        if (array_key_exists("resource-path", $options)) require_once($options["resource-path"]);
+        if (array_key_exists("model-path", $options)) define("RESOURCE_MODEL_PATH", $options["model-path"]);
+        if (array_key_exists("controller-path", $options)) define("RESOURCE_CONTROLLER_PATH", $options["controller-path"]);
+        if (array_key_exists("logger", $options)) $logger = $options["logger"];
+        if (array_key_exists("session", $options)) $session = $options["session"];
+        
         // Register the autoloader
         spl_autoload_register(function ($name) {
 
@@ -28,35 +30,34 @@ class Sleepy {
 
         });
 
-        require_once CONFIG_PATH."/config.php";
-
         $c = new Pimple();
-        $c["config"] = $config;
+        $c["session"] = $session;
         $c["resources"] = $resources;
         $c["validator"] = new Validator();
         $c["response"] = new ResponseController();
         $c["request"] = new RequestController($c["response"]);
 
-        $c["db"] = $c->share(function($c) {
-            try {
-                return new DB($c["config"]["mongo"]);
-            } catch (Exception $e) {
-                $c["response"]->error(500);
-            }
-        });
-
-        $c["logger"] = $c->share(function($c) {
-            return new Logger($c["config"]["mongo"]["level"], $c["db"],  $c["request"]);
-        });
+	$logger->request = $c["request"];
+        $c["logger"] = $logger;
 
         $this->container = $c;
 
     }
 
-    public function dispatch($cb) {
+    public function setDatabase($db) {
+	$this->container["logger"]->db = $db;
+	$this->db = $db;
+    }
+
+    /* Request dispatcher
+    * @param callback $cb Authentication callback
+    */
+    public function dispatch($cb=NULL) {
+
+        if ($cb === NULL) $cb = function() {};
 
         $c = $this->container;
-        $c["request"]->validate($c["validator"], $c["resources"], $cb);
+        $c["request"]->validate($c["validator"], $c["resources"], $c["session"], $cb);
 
         $router = new Router(new Container($c));
         $router->dispatch($c["request"],  $c["response"], $c["session"]);

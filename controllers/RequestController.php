@@ -9,16 +9,16 @@ class RequestController {
 
         $this->response = $response;
 
-		$uri = $_SERVER["REQUEST_URI"];
-		$uri = (substr($uri, 0, 1) === "/") ? substr($uri, 1) : $uri;
+        $uri = $_SERVER["REQUEST_URI"];
+        $uri = (substr($uri, 0, 1) === "/") ? substr($uri, 1) : $uri;
         $uri = explode("/", $uri);
 
         // Lets check for versioning
-        $offset = 1;
+        $offset = 0;
         $this->data["version"] = 1;
-        if (ctype_digit($uri[1])) {
+        if (sizeof($uri) > 1 && ctype_digit($uri[1])) {
 
-            $offset = 2;
+            $offset = 1;
             $this->data["version"] = $uri[1];
 
         }
@@ -53,9 +53,9 @@ class RequestController {
         foreach ($this->data["body"] as $key=>$val)
             $this->data["body"][$key] = trim(iconv(mb_detect_encoding($text, mb_detect_order(), TRUE), "UTF-8", $val));
 
-        $ip = $_SERVER["HTTP_USER_IP"];
-        if (strlen($ip) === 0) $ip = $_SERVER["HTTP_X_REAL_IP"];
-        if (strlen($ip) === 0) $ip = $_SERVER["REMOTE_ADDR"];
+        if (array_key_exists("HTTP_USER_IP", $_SERVER)) $ip = $_SERVER["HTTP_USER_IP"];
+        else if (array_key_exists("HTTP_X_REAL_IP", $_SERVER)) $ip = $_SERVER["HTTP_X_REAL_IP"];
+        else if (array_key_exists("REMOTE_ADDR", $_SERVER)) $ip = $_SERVER["REMOTE_ADDR"];
 
         $this->data["ip"] = $ip;
         $this->data["user-agent"] = $_SERVER["HTTP_USER_AGENT"];
@@ -82,7 +82,7 @@ class RequestController {
         return $this->data[$key];
     }
 
-    public function validate(Validator $validator, array $resources, $cb) {
+    public function validate(Validator $validator, array $resources, $session, $cb) {
 
         $noun = $this->data["noun"];
         $verb = $this->data["verb"];
@@ -90,7 +90,8 @@ class RequestController {
 
         if ($verb === "OPTIONS") return;
 
-        if ($resources[$noun][$verb] === NULL) $response->notFound();
+        if (array_key_exists($noun, $resources) === FALSE) $response->notFound();
+        else if (array_key_exists($verb, $resources[$noun]) === FALSE) $response->notFound();
         else {
 
             $failedKeys = array();
@@ -122,7 +123,10 @@ class RequestController {
             }
 
             if (sizeof($failedKeys) > 0) $response->forbidden($failedKeys);
-            if ($resources[$noun][$verb]["authenticated"] === TRUE && $cb($this, $response) === FALSE) $response->forbidden();
+
+	    // If authentication is required, execute the callback and pass in the request, response and session
+            if ($resources[$noun][$verb]["authenticated"] === TRUE &&
+		$cb($this, $response, $session) === FALSE) $response->forbidden();
 
         }
     }

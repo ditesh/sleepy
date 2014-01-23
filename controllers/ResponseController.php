@@ -12,9 +12,14 @@ class ResponseController {
         $headers = getallheaders();
 
         foreach ($headers as $k=>$v) $baseline[strtoupper($k)] = $v;
-        $origin = $baseline["ORIGIN"];
-        $allowMethods = $baseline["ACCESS-CONTROL-REQUEST-METHOD"];
-        $allowHeaders = $baseline["ACCESS-CONTROL-REQUEST-HEADERS"];
+
+        $origin = "";
+        $allowMethods = "";
+        $allowHeaders = "";
+
+        if (array_key_exists("ORIGIN", $baseline)) $origin = $baseline["ORIGIN"];
+        if (array_key_exists("ACCESS-CONTROL-REQUEST-METHOD", $baseline)) $allowMethods = $baseline["ACCESS-CONTROL-REQUEST-METHOD"];
+        if (array_key_exists("ACCESS-CONTROL-REQUEST-HEADERS", $baseline)) $allowHeaders = $baseline["ACCESS-CONTROL-REQUEST-HEADERS"];
 
         if (strlen($origin) > 0) {
 
