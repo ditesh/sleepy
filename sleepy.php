@@ -15,10 +15,19 @@ class Sleepy {
     public function __construct(array $options=array()) {
 
         if (array_key_exists("resource-path", $options)) require_once($options["resource-path"]);
+        else throw new Exception("Resource path not set");
+
         if (array_key_exists("model-path", $options)) define("RESOURCE_MODEL_PATH", $options["model-path"]);
+        else throw new Exception("Model path not set");
+
         if (array_key_exists("controller-path", $options)) define("RESOURCE_CONTROLLER_PATH", $options["controller-path"]);
+        else throw new Exception("Controller path not set");
+
         if (array_key_exists("logger", $options)) $logger = $options["logger"];
+        else $logger = NULL;
+
         if (array_key_exists("session", $options)) $session = $options["session"];
+        else $session = NULL;
         
         // Register the autoloader
         spl_autoload_register(function ($name) {
@@ -37,7 +46,7 @@ class Sleepy {
         $c["response"] = new ResponseController();
         $c["request"] = new RequestController($c["response"]);
 
-	$logger->request = $c["request"];
+        $logger->request = $c["request"];
         $c["logger"] = $logger;
 
         $this->container = $c;
@@ -45,8 +54,8 @@ class Sleepy {
     }
 
     public function setDatabase($db) {
-	$this->container["logger"]->db = $db;
-	$this->db = $db;
+        $this->container["logger"]->db = $db;
+        $this->container["db"] = $db;
     }
 
     /* Request dispatcher

@@ -6,7 +6,7 @@ class Validator {
 
     /*
     * Valid types are:
-    * float, int
+    * float, int and other validate filters
     * ctype_print, ctype_alpha, ctype_alnum, ctype_*
     * validate_currency
     * validate_country
