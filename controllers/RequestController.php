@@ -24,7 +24,10 @@ class RequestController {
         }
 
         $this->data["uri"] = parse_url($uri[$offset]);
-        $this->data["noun"] = $this->data["uri"]["path"];
+
+        $this->data["noun"] = "";
+        if (array_key_exists("path", $this->data["uri"]))  $this->data["noun"] = $this->data["uri"]["path"];
+
         $this->data["verb"] = $_SERVER['REQUEST_METHOD'];
         $this->data["request"] = $_GET;
 
@@ -51,7 +54,7 @@ class RequestController {
 
         // Ensure charset is UTF-8
         foreach ($this->data["body"] as $key=>$val)
-            $this->data["body"][$key] = trim(iconv(mb_detect_encoding($text, mb_detect_order(), TRUE), "UTF-8", $val));
+            $this->data["body"][$key] = trim(iconv(mb_detect_encoding($val, mb_detect_order(), TRUE), "UTF-8", $val));
 
         if (array_key_exists("HTTP_USER_IP", $_SERVER)) $ip = $_SERVER["HTTP_USER_IP"];
         else if (array_key_exists("HTTP_X_REAL_IP", $_SERVER)) $ip = $_SERVER["HTTP_X_REAL_IP"];
@@ -65,7 +68,8 @@ class RequestController {
 
     // Magic method to get 
     public function __get($key) {
-        return $this->data["body"][$key];
+        if (array_key_exists($key, $this->data["body"])) return $this->data["body"][$key];
+        return NULL;
     }
 
     // Support for hyphenated keys
@@ -95,8 +99,11 @@ class RequestController {
         else {
 
             $failedKeys = array();
-            $mandatory = $resources[$noun][$verb]["mandatory"];
-            $optional = $resources[$noun][$verb]["optional"];
+            $mandatory = array();
+            $optional = array();
+
+            if (array_key_exists("mandatory", $resources[$noun][$verb])) $mandatory = $resources[$noun][$verb]["mandatory"];
+            if (array_key_exists("optional", $resources[$noun][$verb])) $optional = $resources[$noun][$verb]["optional"];
 
             if (is_array($mandatory))
             foreach ($mandatory as $key=>$constraints) {
@@ -116,17 +123,20 @@ class RequestController {
                 if (sizeof($constraints) === 0) continue;
 
                 if ($constraints[0] === "validate_upload") $val = $this->data["files"][$key];
-                else $val = $this->data["body"][$key];
+                else if (array_key_exists($key, $this->data["body"])) {
+                    
+                    $val = $this->data["body"][$key];
 
-                if (strlen($val) > 0 && $validator->validate($val, $constraints) === FALSE) $failedKeys[] = $key;
+                    if (strlen($val) > 0 && $validator->validate($val, $constraints) === FALSE) $failedKeys[] = $key;
 
+                }
             }
 
             if (sizeof($failedKeys) > 0) $response->forbidden($failedKeys);
 
-	    // If authentication is required, execute the callback and pass in the request, response and session
-            if ($resources[$noun][$verb]["authenticated"] === TRUE &&
-		$cb($this, $response, $session) === FALSE) $response->forbidden();
+            // If authentication is required, execute the callback and pass in the request, response and session
+            if (array_key_exists("authenticated", $resources[$noun][$verb]) &&$resources[$noun][$verb]["authenticated"] === TRUE &&
+                    $cb($this, $response, $session) === FALSE) $response->forbidden();
 
         }
     }

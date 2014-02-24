@@ -17,7 +17,10 @@ class Container {
             $controller = $name;
             $model = $this->getModel($noun, $verb);
 
-            if (array_key_exists("controller", $this->container["resources"][$noun][$verb])) $controller = str_replace(" ", "", ucwords(str_replace("-", " ", $this->container["resources"][$noun][$verb]["controller"])))."ResourceController";
+            if (array_key_exists("controller", $this->container["resources"][$noun][$verb]))
+                $controller = str_replace(" ", "",
+                    ucwords(str_replace("-", " ",
+                        $this->container["resources"][$noun][$verb]["controller"])))."ResourceController";
 
             $this->container[$name] = $this->container->share(function() use ($controller, $model) {
 
