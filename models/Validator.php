@@ -6,9 +6,16 @@ class Validator {
 
     /*
     * Valid types are:
+    * ip, private ip, public ip (done)
+    * float, positive float, negative float (done)
+    * int, positive int, negative int (done)
+    * currency, currency code
+    * country code
+    * price
+    * upload
+    * alphabets, alphanumeric
     * float, int and other validate filters
     * ctype_print, ctype_alpha, ctype_alnum, ctype_*
-    * validate_currency
     * validate_country
     * validate_mongo_id
     * validate_mysql_id
