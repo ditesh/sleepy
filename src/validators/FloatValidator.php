@@ -2,7 +2,7 @@
 
 class FloatValidator extends ValidatorInterface {
 
-    public function validate ($val, $options) {
+    public function validate($val) {
 
         switch ($this->type) {
 
@@ -18,5 +18,12 @@ class FloatValidator extends ValidatorInterface {
             default: return FALSE;
 
         }
+    }
+
+    public function match($val, $against) {
+
+        if (!is_array($against) $against[] = $against;
+        return in_array($val, $against);
+
     }
 }

@@ -16,12 +16,23 @@ class Sleepy {
 
     private $container;
 
-    public function __construct() {
+    private checkDependencies() {
+
+        if (!function_exists("mb_strlen")) return FALSE;
+
+        return TRUE;
+
+    }
+
+    public function __construct($options=[]) {
+
+        if ($this->checkDependencies() === FALSE) throw new Exception("One of more dependencies not installed");
 
         $c = new Pimple();
         $c["validator"] = new Validator();
         $c["response"] = new ResponseController();
         $c["request"] = new RequestController($c["response"]);
+        $c["options"] = $this->initOptions($options);
 
         $this->container = new Container($c);
 
@@ -33,6 +44,18 @@ class Sleepy {
 
     public function __set($key, $value) {
         $this->container[$key] = $value;
+    }
+
+    public function initOptions($options) {
+
+        $retval = [];
+        $retval["content-type"] = "application/json";
+        $retval["accept-charset"] = "utf-8";
+
+        if (array_key_exists("content-type", $options)) $retval["content-type"] = $options["content-type"];
+        if (array_key_exists("accept-charset", $options)) $retval["accept-charset"] = $options["accept-charset"];
+        return $retval;
+
     }
 
     public function initResources($resources) {
