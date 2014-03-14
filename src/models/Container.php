@@ -2,7 +2,7 @@
 
 class Container {
 
-    private Pimple $pimple;
+    private $pimple;
     private $converter;
 
     public function __construct(Pimple $pimple) {

@@ -4,7 +4,7 @@ class IpValidator extends ValidatorInterface {
 
     public function validate ($val, $options) {
 
-        switch $this->type:
+        switch ($this->type) {
 
             case "ip":
                 return filter_var($val, FILTER_VALIDATE_IP);
@@ -17,5 +17,6 @@ class IpValidator extends ValidatorInterface {
     
             default: return FALSE;
 
+        }
     }
 }

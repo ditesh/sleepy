@@ -4,7 +4,7 @@ class IntValidator extends ValidatorInterface {
 
     public function validate ($val, $options) {
 
-        switch $this->type:
+        switch ($this->type) {
 
             case "int":
                 return filter_var($val, FILTER_VALIDATE_INT);
@@ -17,5 +17,6 @@ class IntValidator extends ValidatorInterface {
     
             default: return FALSE;
 
+        }
     }
 }

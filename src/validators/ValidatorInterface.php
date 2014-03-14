@@ -1,6 +1,5 @@
 <?php
 
 interface ValidatorInterface {
-    public $type;
-    public function validate($val) {}
+    public function validate($val);
 }

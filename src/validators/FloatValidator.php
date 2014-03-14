@@ -4,7 +4,7 @@ class FloatValidator extends ValidatorInterface {
 
     public function validate ($val, $options) {
 
-        switch $this->type:
+        switch ($this->type) {
 
             case "float":
                 return filter_var($val, FILTER_VALIDATE_FLOAT);
@@ -17,5 +17,6 @@ class FloatValidator extends ValidatorInterface {
     
             default: return FALSE;
 
+        }
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace "Sleepy";
+namespace Sleepy;
 
 define("BASE_PATH", realpath(dirname(__FILE__)));
 define("MODEL_PATH", BASE_PATH."/models");
@@ -14,7 +14,7 @@ require_once BASE_PATH."/compat/compat.php";
 
 class Sleepy {
 
-    private Pimple $container;
+    private $container;
 
     public function __construct() {
 
@@ -37,7 +37,7 @@ class Sleepy {
 
     public function initResources($resources) {
 
-        if (!is_null($resources) {
+        if (!is_null($resources)) {
 
             $filenames = [];
 

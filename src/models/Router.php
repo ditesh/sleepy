@@ -8,7 +8,7 @@ class Router {
         $this->container = $container;
     }
 
-    public function dispatch((array) $controllerParams, (array) $modelParams) {
+    public function dispatch($controllerParams, $modelParams) {
 
         $request = $this->container->request;
         $response = $this->container->response;
@@ -34,9 +34,11 @@ class Router {
 
         } catch (ServerErrorException $e) {
 
-            $response->serverError(
+            $response->serverError();
 
         } catch (ClientErrorException $e) {
+
+            $response->clientError();
 
         }
     }
