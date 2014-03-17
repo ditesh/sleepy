@@ -2,7 +2,7 @@
 
 abstract class AbstractValidator {
 
-    abstract function validate($val) {}
+    abstract function validate($val);
 
     public function match($val, $against) {
 
