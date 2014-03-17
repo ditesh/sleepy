@@ -1,6 +1,6 @@
 <?php
 
-class IntValidator extends ValidatorInterface {
+class IntValidator extends AbstractValidator {
 
     public function validate($val) {
 
@@ -18,12 +18,5 @@ class IntValidator extends ValidatorInterface {
             default: return FALSE;
 
         }
-    }
-
-    public function match ($val, $against) {
-
-        if (!is_array($against) $against[] = $against;
-        return in_array($val, $against);
-
     }
 }
