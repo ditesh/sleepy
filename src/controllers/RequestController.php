@@ -18,15 +18,15 @@ class RequestController {
 
         $this->parsed["uri"] = parse_url($uri[$offset]);
 
-        $this->parsed["noun"] = "";
-        if (array_key_exists("path", $this->parsed["uri"]))  $this->parsed["noun"] = $this->parsed["uri"]["path"];
+        $this->parsed["resource"] = "";
+        if (array_key_exists("path", $this->parsed["uri"]))  $this->parsed["resource"] = $this->parsed["uri"]["path"];
 
-        $this->parsed["verb"] = $_SERVER['REQUEST_METHOD'];
+        $this->parsed["method"] = $_SERVER['REQUEST_METHOD'];
         $this->parsed["request"] = $_GET;
 
-        if ($this->parsed["verb"] === "GET") $this->body = $_GET;
-        else if ($this->parsed["verb"] === "POST") $this->body = $_POST;
-        else if ($this->parsed["verb"] === "PUT" || $this->parsed["verb"] === "DELETE") parse_str(file_get_contents("php://input"), $this->body);
+        if ($this->parsed["method"] === "GET") $this->body = $_GET;
+        else if ($this->parsed["method"] === "POST") $this->body = $_POST;
+        else if ($this->parsed["method"] === "PUT" || $this->parsed["method"] === "DELETE") parse_str(file_get_contents("php://input"), $this->body);
 
         if (sizeof($_FILES) > 0) {
             
@@ -75,24 +75,24 @@ class RequestController {
         return $this->files[$key];
     }
 
-    public function validate(Validator $validator, array $resources, $session, $cb) {
+    public function validate(Validator $validator, array $resources, $session) {
 
-        $noun = $this->parsed["noun"];
-        $verb = $this->parsed["verb"];
+        $resource = $this->parsed["resource"];
+        $method = $this->parsed["method"];
         $response = $this->response;
 
-        if ($verb === "OPTIONS") return;
+        if ($method === "OPTIONS") return;
 
-        if (array_key_exists($noun, $resources) === FALSE) $response->notFound();
-        else if (array_key_exists($verb, $resources[$noun]) === FALSE) $response->notFound();
+        if (array_key_exists($resource, $resources) === FALSE) $response->notFound();
+        else if (array_key_exists($method, $resources[$resource]) === FALSE) $response->notFound();
         else {
 
             $failedKeys = array();
             $mandatory = array();
             $optional = array();
 
-            if (array_key_exists("mandatory", $resources[$noun][$verb])) $mandatory = $resources[$noun][$verb]["mandatory"];
-            if (array_key_exists("optional", $resources[$noun][$verb])) $optional = $resources[$noun][$verb]["optional"];
+            if (array_key_exists("mandatory", $resources[$resource][$method])) $mandatory = $resources[$resource][$method]["mandatory"];
+            if (array_key_exists("optional", $resources[$resource][$method])) $optional = $resources[$resource][$method]["optional"];
 
             if (is_array($mandatory))
             foreach ($mandatory as $key=>$constraints) {
@@ -125,10 +125,16 @@ class RequestController {
 
             if (sizeof($failedKeys) > 0) $response->forbidden($failedKeys);
 
-            // If authentication is required, execute the callback and pass in the request, response and session
-            if (array_key_exists("authenticated", $resources[$noun][$verb]) &&$resources[$noun][$verb]["authenticated"] === TRUE &&
-                    $cb($this, $response, $session) === FALSE) $response->forbidden();
-
         }
+   }
+
+    public function authenticate($cb) {
+  
+        // If authentication is required, execute the callback and pass in the params
+        if (array_key_exists("authenticated", $resources[$resource][$method]) &&
+            $resources[$resource][$method]["authenticated"] === TRUE &&
+            $cb() === FALSE)
+                $response->forbidden();
+
     }
 }

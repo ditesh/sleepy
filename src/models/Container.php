@@ -18,20 +18,24 @@ class Container {
         $this->pimple[$key] = $value;
     }
 
-    public function getController($noun, $verb) {
+    public function getController($resource, $method) {
 
-        $name = $this->converter($noun, "controller");
+        $name = $this->converter($resource, "controller");
 
         if ($this->pimple->offsetExists($name) === FALSE) {
 
             // If a controller is defined in resource definition file, use that
             $controller = $name;
-            $model = $this->getModel($noun, $verb);
+            $model = $this->getModel($resource, $method);
 
-            if (array_key_exists("controller", $this->pimple["resources"][$noun][$verb]))
+            if (array_key_exists("controller", $this->pimple["resources"][$resource][$method])) {
+
                 $controller = str_replace(" ", "",
                     ucwords(str_replace("-", " ",
-                        $this->pimple["resources"][$noun][$verb]["controller"])))."ResourceController";
+                        $this->pimple["resources"][$resource][$method]["controller"])));
+                $controller .= "ResourceController";
+
+            }
 
             $this->pimple[$name] = $this->pimple->share(function() use ($controller, $model) {
 
@@ -46,16 +50,23 @@ class Container {
 
     }
 
-    public function getModel($noun, $verb) {
+    public function getModel($resource, $method) {
 
-        $name = $this->converter($noun, "model");
+        $name = $this->converter($resource, "model");
 
         if ($this->pimple->offsetExists($name) === FALSE) {
 
             $model = $name;
 
             // If a model is defined in resource definition file, use that
-            if (array_key_exists("model", $this->pimple["resources"][$noun][$verb])) $model = str_replace(" ",  "", ucwords(str_replace("-", " ", $this->pimple["resources"][$noun][$verb]["model"])))."ResourceModel";
+            if (array_key_exists("model", $this->pimple["resources"][$resource][$method])) {
+                
+                $model = str_replace(" ",  "",
+                    ucwords(str_replace("-", " ",
+                        $this->pimple["resources"][$resource][$method]["model"])));
+                $model .= "ResourceModel";
+
+            }
 
             $this->pimple[$name] = $this->pimple->share(function($c) use ($model) {
 

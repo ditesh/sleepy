@@ -1,6 +1,6 @@
 <?php
 
-class Router {
+class DispatcherController {
 
     private $container;
 
@@ -14,10 +14,12 @@ class Router {
         $response = $this->container->response;
 
         // Preflight the request
-        $verb = $request->getParsed("verb");
-        if ($verb === "OPTIONS") $response->preflight();
+        $method = $request->method;
+        if ($method === "OPTIONS") $response->preflight();
 
-        $controller = $this->container->getController($request->noun, $request->verb);
+        $controller = $this->container->getController($request->resource, $request->method);
+        $controller->request = $request;
+        $controller->response = $response;
         foreach ($controllerParams as $v) $controller->{$v} = $container->{$v};
 
         call_user_func(array($controller, "setup"), $request->params, $request->body);
@@ -25,7 +27,7 @@ class Router {
 
         try {
 
-            $retval = call_user_func(array($controller, strtolower($verb)), $request->params, $request->body);
+            $retval = call_user_func(array($controller, strtolower($method)), $request->params, $request->body);
             $response->json($retval);
 
         } catch (NoResponseException $e) {
@@ -34,11 +36,11 @@ class Router {
 
         } catch (ServerErrorException $e) {
 
-            $response->serverError();
+            $response->serverError($e);
 
         } catch (ClientErrorException $e) {
 
-            $response->clientError();
+            $response->clientError($e);
 
         }
     }

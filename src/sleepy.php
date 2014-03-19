@@ -5,30 +5,37 @@ namespace Sleepy;
 define("BASE_PATH", realpath(dirname(__FILE__)));
 define("MODEL_PATH", BASE_PATH."/models");
 define("CONTROLLER_PATH", BASE_PATH."/controllers");
-define("CONFIG_PATH", BASE_PATH."/configuration");
 
 use Symfony\Component\Yaml\Parser;
 
-// Compatibility includes
 require_once BASE_PATH."/compat/compat.php";
+require_once BASE_PATH."/autoload.php";
 
 class Sleepy {
 
     private $container;
+    private $authCallback;
 
-    private checkDependencies() {
+    private function checkDependencies() {
 
-        if (!function_exists("mb_strlen")) return FALSE;
+        $fns = ["mb_strlen"];
 
-        return TRUE;
+        foreach ($fns as $fn)
+            if (!function_exists($fn))
+                throw new MissingDependencyException($fn);
 
     }
 
     public function __construct($options=[]) {
 
-        if ($this->checkDependencies() === FALSE) throw new Exception("One of more dependencies not installed");
+        try {
+            $this->checkDependencies();
+        } catch (MissingDependencyException $e) {
+            throw $e;
+        }
 
         $c = new Pimple();
+        $c["resources"] = [];
         $c["validator"] = new Validator();
         $c["response"] = new ResponseController();
         $c["request"] = new RequestController($c["response"]);
@@ -58,42 +65,54 @@ class Sleepy {
 
     }
 
-    public function initResources($resources) {
+    public function initResources(array $resources) {
 
-        if (!is_null($resources)) {
+        $filenames = [];
+        $this->container->resources = [];
 
-            $filenames = [];
+        if (is_dir($resources)) $filenames = glob("$resources/*");
+        else $filenames[] = $resources;
 
-            if (is_dir($resources)) $filenames = glob("$resources/*");
-            else $filenames[] = $resources;
+        foreach ($filenames as $filename) {
 
-            foreach ($filenames as $filename) {
+            try {
 
-                try {
-                    $value = Yaml::parse(file_get_contents($filename));
-                    var_dump($value);
-                } catch (ParseException $e) {
-                    throw InvalidResourceException($e);
-                }
+                $val = Yaml::parse(file_get_contents($filename));
+                $this->container->resources[{str_replace(".yml", "", basename($filename)})] = $val;
 
+            } catch (ParseException $e) {
+                throw InvalidResourceException($e);
             }
 
         }
+    }
+    
+    public function initPlugins() {}
+
+    public function setAuthCallback($cb, $params=[]) {
+
+        $vals = [];
+        foreach ($params as $param) $vals[$param] = $this->container->{$param};
+
+        $this->authCallback = function() use ($vals) {
+            call_user_func_array($cb, $vals);
+        };
+
     }
 
     /* Request dispatcher
     * @param callback $cb Authentication callback
     */
-    public function dispatch($fn, $controllerParams=["request", "response"], $modelParams=[], $cb=NULL) {
+    public function dispatch($fn, $controllerParams=["request", "response"], $modelParams=[]) {
 
         $this->container->converter = $fn;
-        if ($cb === NULL) $cb = function() {};
+        $request = $this->container->request;
 
-        $c = $this->container;
-        $c["request"]->validate($c["validator"], $c["resources"], $c["session"], $cb);
+        $request->validate($c["validator"], $c["resources"]);
+        $request->authenticate($this->authCallback);
 
-        $router = new Router($this->container);
-        $router->dispatch($controllerParams, $modelParams);
+        $dispatcher = new DispatchController($this->container);
+        $dispatcher->dispatch($controllerParams, $modelParams);
 
     }
 }
