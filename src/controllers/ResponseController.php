@@ -1,5 +1,7 @@
 <?php
 
+namespace Sleepy\Controller;
+
 class ResponseController {
 
     private $code;

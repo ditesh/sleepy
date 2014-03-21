@@ -10,10 +10,10 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "symphony/yaml": "~2.4",
+        "ext-iconv": "*",
+        "ext-mbstring": "*",
+        "symfony/yaml": "~2.4",
         "pimple/pimple": "~2.0.0",
-    },
-    "autoload": {
-        "files": ["sleepy.php"]
+        "filp/whoops": "1"
     }
 }

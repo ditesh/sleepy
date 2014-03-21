@@ -3,12 +3,21 @@
 class DispatcherController {
 
     private $container;
+    private function getFunctionParams($resource, $method) {
+
+        $retval = [];
+        $name = $this->converter($resource);
+        $f = new ReflectionFunction($name, $method);
+        foreach ($f->getParameters() as $param) $retval[] = $param->name;   
+        return $retval;
+
+    }
 
     public function  __construct(Container $container) {
         $this->container = $container;
     }
 
-    public function dispatch($controllerParams, $modelParams) {
+    public function dispatch() {
 
         $request = $this->container->request;
         $response = $this->container->response;
@@ -17,17 +26,16 @@ class DispatcherController {
         $method = $request->method;
         if ($method === "OPTIONS") $response->preflight();
 
-        $controller = $this->container->getController($request->resource, $request->method);
+        $controller = $this->container->getController($request->resource);
         $controller->request = $request;
         $controller->response = $response;
-        foreach ($controllerParams as $v) $controller->{$v} = $container->{$v};
 
-        call_user_func(array($controller, "setup"), $request->params, $request->body);
-        call_user_func(array($controller, "validate"), $request->params, $request->body);
+        call_user_func_array(array($controller, "setup"), $this->getFunctionParams($resource, "setup"));
+        call_user_func_array(array($controller, "validate"), $this->getFunctionParams($resource, "validate"));
 
         try {
 
-            $retval = call_user_func(array($controller, strtolower($method)), $request->params, $request->body);
+            $retval = call_user_func_array(array($controller, $method), $this->getFunctionParams($resource, $method));
             $response->json($retval);
 
         } catch (NoResponseException $e) {

@@ -1,44 +1,32 @@
 <?php
 
 namespace Sleepy;
+use Sleepy\Controller;
 
-define("BASE_PATH", realpath(dirname(__FILE__)));
-define("MODEL_PATH", BASE_PATH."/models");
-define("CONTROLLER_PATH", BASE_PATH."/controllers");
+define('SLEEPY\BASE_PATH', realpath(dirname(__FILE__)));
+define('SLEEPY\MODEL_PATH', BASE_PATH."/models");
+define('SLEEPY\CONTROLLER_PATH', BASE_PATH."/controllers");
 
-use Symfony\Component\Yaml\Parser;
+use \Symfony\Component\Yaml\Parser;
 
 require_once BASE_PATH."/compat/compat.php";
-require_once BASE_PATH."/autoload.php";
+require_once BASE_PATH."/../vendor/autoload.php";
+
+$whoops = new \Whoops\Run;
+$whoops->pushHandler(new \Whoops\Handler\JsonResponseHandler);
+$whoops->register();
 
 class Sleepy {
 
     private $container;
     private $authCallback;
 
-    private function checkDependencies() {
-
-        $fns = ["mb_strlen"];
-
-        foreach ($fns as $fn)
-            if (!function_exists($fn))
-                throw new MissingDependencyException($fn);
-
-    }
-
     public function __construct($options=[]) {
 
-        try {
-            $this->checkDependencies();
-        } catch (MissingDependencyException $e) {
-            throw $e;
-        }
-
-        $c = new Pimple();
+        $c = new \Pimple();
         $c["resources"] = [];
-        $c["validator"] = new Validator();
-        $c["response"] = new ResponseController();
-        $c["request"] = new RequestController($c["response"]);
+        $c["response"] = new Controller\ResponseController();
+        $c["request"] = new Controller\RequestController($c["response"]);
         $c["options"] = $this->initOptions($options);
 
         $this->container = new Container($c);
@@ -78,7 +66,7 @@ class Sleepy {
             try {
 
                 $val = Yaml::parse(file_get_contents($filename));
-                $this->container->resources[{str_replace(".yml", "", basename($filename)})] = $val;
+                $this->container->resources[str_replace(".yml", "", basename($filename))] = $val;
 
             } catch (ParseException $e) {
                 throw InvalidResourceException($e);
@@ -103,16 +91,16 @@ class Sleepy {
     /* Request dispatcher
     * @param callback $cb Authentication callback
     */
-    public function dispatch($fn, $controllerParams=["request", "response"], $modelParams=[]) {
+    public function dispatch($converter) {
 
-        $this->container->converter = $fn;
+        $this->container->converter = $converter;
         $request = $this->container->request;
 
         $request->validate($c["validator"], $c["resources"]);
         $request->authenticate($this->authCallback);
 
         $dispatcher = new DispatchController($this->container);
-        $dispatcher->dispatch($controllerParams, $modelParams);
+        $dispatcher->dispatch();
 
     }
 }

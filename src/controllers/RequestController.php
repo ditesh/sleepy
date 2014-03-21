@@ -1,5 +1,7 @@
 <?php
 
+namespace Sleepy\Controller;
+
 class RequestController {
 
     private $parsed=[];
@@ -21,7 +23,7 @@ class RequestController {
         $this->parsed["resource"] = "";
         if (array_key_exists("path", $this->parsed["uri"]))  $this->parsed["resource"] = $this->parsed["uri"]["path"];
 
-        $this->parsed["method"] = $_SERVER['REQUEST_METHOD'];
+        $this->parsed["method"] = strtolower($_SERVER['REQUEST_METHOD']);
         $this->parsed["request"] = $_GET;
 
         if ($this->parsed["method"] === "GET") $this->body = $_GET;
