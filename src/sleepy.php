@@ -2,15 +2,13 @@
 
 namespace Sleepy;
 use Sleepy\Controller;
-
-define('SLEEPY\BASE_PATH', realpath(dirname(__FILE__)));
-define('SLEEPY\MODEL_PATH', BASE_PATH."/models");
-define('SLEEPY\CONTROLLER_PATH', BASE_PATH."/controllers");
-
 use \Symfony\Component\Yaml\Parser;
 
-require_once BASE_PATH."/compat/compat.php";
-require_once BASE_PATH."/../vendor/autoload.php";
+require_once realpath(dirname(__FILE__)."/../vendor/autoload.php");
+require_once realpath(dirname(__FILE__)."/SplClassLoader.php");
+
+$loader = new SplClassLoader('Sleepy');
+$loader->register();
 
 $whoops = new \Whoops\Run;
 $whoops->pushHandler(new \Whoops\Handler\JsonResponseHandler);
