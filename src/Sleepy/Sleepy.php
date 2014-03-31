@@ -26,13 +26,12 @@ class Sleepy {
     private $container;
     private $configurator;
 
-    public function __construct($options=[]) {
+    public function __construct() {
 
         $c = new \Pimple();
         $c["resources"] = [];
         $c["response"] = new Controller\ResponseController();
         $c["request"] = new Controller\RequestController($c["response"]);
-        $c["options"] = $this->initOptions($options);
 
         $this->container = new Library\Container($c);
         $this->configurator = new Library\Configurator($c);
@@ -47,10 +46,10 @@ class Sleepy {
         $this->container[$key] = $value;
     }
 
-    public function configure($options) {
+    public function configure($path) {
 
         try {
-            $this->configurator->configureOptions($options);
+            $this->configurator->configureOptions($path);
         } catch (Exception\ConfigurationException $e) {
             throw $e;
         }
@@ -59,10 +58,10 @@ class Sleepy {
 
     }
 
-    public function configureResources($resources) {
+    public function configureResources($path) {
 
         try {
-            $this->configurator->configureResources($resources);
+            $this->configurator->configureResources($path);
         } catch (Exception\ConfigurationException $e) {
             throw $e;
         }
@@ -71,10 +70,10 @@ class Sleepy {
 
     }
  
-    public function configureHandlers($handlers) {
+    public function configureHandlers($path) {
 
         try {
-            $this->configurator->configureHandlers($handlers);
+            $this->configurator->configureHandlers($path);
         } catch (Exception\ConfigurationException $e) {
             throw $e;
         }

@@ -6,10 +6,7 @@ class JsonResponse extends AbstractResponse {
 
     public $contentType = "application/json";
 
-    public function send($retval) {
-
-        $this->sendContentHeader();
+    public function sendBody($retval) {
         echo json_encode($retval);
-
     }
 }

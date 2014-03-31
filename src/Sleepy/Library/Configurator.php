@@ -87,7 +87,7 @@ class Configurator {
 
             }
 
-            $this->container->handlers = $handlers;
+            $this->container->configuration["handlers"] = $handlers;
 
         } catch (Exception\ConfigurationException $e) {
             throw $e;

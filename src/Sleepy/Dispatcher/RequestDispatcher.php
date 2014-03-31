@@ -23,7 +23,9 @@ class RequestDispatcher {
 
         // Preflight the request
         $method = $request->method;
-        if ($method === "OPTIONS") $response->preflight();
+        if ($method === "OPTIONS") {
+            $response->send(Response\ResponseFactory::make())->flush()->end();
+        }
 
         $name = $this->container->converter($request->resource);
         $controller = $this->container->getController($request->resource);
@@ -37,7 +39,7 @@ class RequestDispatcher {
 
             $retval = call_user_func_array(array($controller, $method), Library\Reflector::getParams($name, $method));
 
-            if (!is_object($retval) === TRUE || !is_subclass_of($retval, "HttpResponse") === TRUE)
+            if (is_object($retval) === FALSE || is_subclass_of($retval, "AbstractResponse") === FALSE)
                 $retval = Response\ResponseFactory::make($this->container["options"]["content-encoding"], $retval);
 
         } catch (Exception $e) {
@@ -51,7 +53,7 @@ class RequestDispatcher {
         $handlerDispatcher->shutdown();
 
         // Flush out the response to the client
-        $response->flush();
+        $response->flush()->end();
 
     }
 }
